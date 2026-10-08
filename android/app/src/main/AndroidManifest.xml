@@ -1,0 +1,8 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+ <uses-permission android:name="android.permission.SEND_SMS"/><uses-permission android:name="android.permission.RECEIVE_SMS"/><uses-permission android:name="android.permission.READ_SMS"/><uses-permission android:name="android.permission.INTERNET"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING"/><uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+ <application android:theme="@style/AppTheme" android:label="홍당무 모바일" android:usesCleartextTraffic="true" android:allowBackup="false" android:supportsRtl="true">
+  <service android:name=".MobileBridgeService" android:exported="false" android:foregroundServiceType="remoteMessaging"/>
+  <activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity>
+  <receiver android:name=".SmsReceiver" android:exported="false"><intent-filter android:priority="999"><action android:name="android.provider.Telephony.SMS_RECEIVED"/></intent-filter></receiver>
+ </application>
+</manifest>
