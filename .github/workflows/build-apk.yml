@@ -2,10 +2,6 @@ name: Build HongDangMu Android APK
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - "android/**"
-      - ".github/workflows/build-apk.yml"
 
 jobs:
   build:
@@ -41,7 +37,7 @@ jobs:
           sha256sum android/app/build/outputs/apk/debug/app-debug.apk | tee android/app/build/outputs/apk/debug/app-debug.apk.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: hongdangmu-mobile-debug-v25
+          name: hongdangmu-mobile-debug-v28.3.0
           path: |
             android/app/build/outputs/apk/debug/app-debug.apk
             android/app/build/outputs/apk/debug/app-debug.apk.sha256
