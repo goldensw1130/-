@@ -3,8 +3,12 @@ name: Build HongDangMu Android APK
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
+      - "security/**"
     paths:
       - "android/**"
+      - "tools/audit_android_apk.py"
       - ".github/workflows/build-apk.yml"
 
 jobs:
@@ -27,21 +31,24 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.10.2"
-      - name: Build debug APK
+      - name: Lint and build safer APK
         shell: bash
         run: |
           export ANDROID_HOME=/usr/local/lib/android/sdk
           export ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
           export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
-          gradle -p android :app:assembleDebug --no-daemon
-      - name: Verify APK
+          gradle -p android :app:lintDebug :app:assembleDebug --no-daemon
+      - name: Audit built APK permissions and bytecode
         shell: bash
         run: |
-          test -s android/app/build/outputs/apk/debug/app-debug.apk
+          python tools/audit_android_apk.py android/app/build/outputs/apk/debug/app-debug.apk "$ANDROID_HOME/build-tools/35.0.0/aapt"
+      - name: Generate checksum
+        shell: bash
+        run: |
           sha256sum android/app/build/outputs/apk/debug/app-debug.apk | tee android/app/build/outputs/apk/debug/app-debug.apk.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: hongdangmu-mobile-debug-v28.4.0
+          name: hongdangmu-mobile-safe-debug-v28.7.0
           path: |
             android/app/build/outputs/apk/debug/app-debug.apk
             android/app/build/outputs/apk/debug/app-debug.apk.sha256
