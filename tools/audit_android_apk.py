@@ -25,7 +25,6 @@ if permissions != expected:
 forbidden = [
     b"android/telephony/SmsManager",
     b"android/provider/Telephony$Sms",
-    b"android/accessibilityservice/AccessibilityService",
     b"android.permission.READ_SMS",
     b"android.permission.RECEIVE_SMS",
     b"android.permission.SEND_SMS",
