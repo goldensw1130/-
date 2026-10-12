@@ -76,7 +76,7 @@ class MainActivity : Activity() {
             } catch (e: Exception) { status.text = "메모 저장 오류: ${e.message}" }
         }
         button("저장된 메모 선택 / 불러오기") {
-            val notes = syncStore.listNotes()
+            val notes = syncStore.recentNotes()
             if (notes.isEmpty()) { status.text = "저장된 메모가 없습니다."; return@button }
             val labels = notes.map { "${it.title} · ${it.updatedAt}" }.toTypedArray()
             AlertDialog.Builder(this).setTitle("수정할 메모 선택")
@@ -87,7 +87,7 @@ class MainActivity : Activity() {
                 }.setNegativeButton("취소", null).show()
         }
         button("선택 메모 삭제") {
-            val notes = syncStore.listNotes()
+            val notes = syncStore.recentNotes()
             if (notes.isEmpty()) { status.text = "삭제할 메모가 없습니다."; return@button }
             val labels = notes.map { "${it.title} · ${it.updatedAt}" }.toTypedArray()
             AlertDialog.Builder(this).setTitle("삭제할 메모 선택")
@@ -105,7 +105,7 @@ class MainActivity : Activity() {
                 }.setNegativeButton("취소", null).show()
         }
         button("저장된 메모 목록 새로고침") {
-            val notes = syncStore.listNotes()
+            val notes = syncStore.recentNotes()
             status.text = if (notes.isEmpty()) "저장된 메모가 없습니다." else "저장된 메모 (${notes.size})\n\n" + notes.joinToString("\n\n──────────\n\n") { "${it.title}\n${it.body}\n${it.updatedAt}" }
         }
         button("저장된 동기화 상태 새로고침") { refreshStatus() }
