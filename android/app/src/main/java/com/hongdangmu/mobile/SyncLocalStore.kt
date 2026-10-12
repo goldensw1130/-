@@ -115,22 +115,30 @@ class SyncLocalStore(context: Context) : SQLiteOpenHelper(context, "hongdangmu_s
             val inserted = db.insertWithOnConflict("remote_events", null, values, SQLiteDatabase.CONFLICT_IGNORE) != -1L
             if (inserted && entityType == "sync_notes") {
                 val incomingRevision = event.getInt("revision")
+                require(incomingRevision > 0) { "메모 이벤트 revision은 1 이상이어야 합니다" }
                 val oldRevision = db.rawQuery("SELECT revision FROM sync_note_versions WHERE id=?", arrayOf(entityId)).use { if (it.moveToFirst()) it.getInt(0) else 0 }
-                if (incomingRevision > oldRevision) db.insertWithOnConflict("sync_note_versions", null, ContentValues().apply { put("id", entityId); put("revision", incomingRevision) }, SQLiteDatabase.CONFLICT_REPLACE)
                 val record = payload.optJSONObject("record") ?: JSONObject()
                 require(record.optString("id") == entityId) { "메모 이벤트 ID가 일치하지 않습니다" }
-                when (payload.optString("operation")) {
-                    "delete" -> db.delete("sync_notes", "id=?", arrayOf(entityId))
-                    "insert", "update", "upsert" -> {
-                        val title = record.optString("title", "").take(200)
-                        val body = record.optString("body", "").take(8000)
-                        val updated = record.optString("updated_at", event.optString("created_at", ""))
-                        require(title.isNotBlank() && body.isNotBlank()) { "수신 메모 내용이 비어 있습니다" }
-                        db.insertWithOnConflict("sync_notes", null, ContentValues().apply {
-                            put("id", entityId); put("title", title); put("body", body); put("updated_at", updated)
-                        }, SQLiteDatabase.CONFLICT_REPLACE)
+
+                // A previously received newer revision must never be overwritten by a late,
+                // out-of-order event. Store the event for idempotency, but apply only newer state.
+                if (incomingRevision > oldRevision) {
+                    db.insertWithOnConflict("sync_note_versions", null, ContentValues().apply {
+                        put("id", entityId); put("revision", incomingRevision)
+                    }, SQLiteDatabase.CONFLICT_REPLACE)
+                    when (payload.optString("operation")) {
+                        "delete" -> db.delete("sync_notes", "id=?", arrayOf(entityId))
+                        "insert", "update", "upsert" -> {
+                            val title = record.optString("title", "").take(200)
+                            val body = record.optString("body", "").take(8000)
+                            val updated = record.optString("updated_at", event.optString("created_at", ""))
+                            require(title.isNotBlank() && body.isNotBlank()) { "수신 메모 내용이 비어 있습니다" }
+                            db.insertWithOnConflict("sync_notes", null, ContentValues().apply {
+                                put("id", entityId); put("title", title); put("body", body); put("updated_at", updated)
+                            }, SQLiteDatabase.CONFLICT_REPLACE)
+                        }
+                        else -> throw IllegalArgumentException("지원하지 않는 메모 변경 유형입니다")
                     }
-                    else -> throw IllegalArgumentException("지원하지 않는 메모 변경 유형입니다")
                 }
             }
             db.setTransactionSuccessful()
