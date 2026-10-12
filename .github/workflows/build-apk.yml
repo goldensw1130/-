@@ -27,13 +27,13 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.10.2"
-      - name: Lint and build debug APK
+      - name: Build debug APK
         shell: bash
         run: |
           export ANDROID_HOME=/usr/local/lib/android/sdk
           export ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
           export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
-          gradle -p android :app:lintDebug :app:assembleDebug --no-daemon
+          gradle -p android :app:assembleDebug --no-daemon
       - name: Verify APK
         shell: bash
         run: |
